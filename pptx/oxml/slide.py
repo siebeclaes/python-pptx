@@ -245,6 +245,68 @@ class CT_TimeNodeList(BaseOxmlElement):
         video = parse_xml(video_xml)
         self.append(video)
 
+    def add_video_play_onclick(self, shape_id, video_length):
+        """Add a new `p:seq` child element for movie havind *shape_id* and length *video_length* in ms."""
+        seq_xml = (
+            '<p:seq concurrent="1" nextAc="seek" %s>\n'
+            '  <p:cTn id="%d" dur="indefinite" nodeType="mainSeq">\n'
+            '	<p:childTnLst>\n'
+            '	  <p:par>\n'
+            '		<p:cTn id="%d" fill="hold">\n'
+            '		  <p:stCondLst>\n'
+            '			<p:cond delay="indefinite"/>\n'
+            '		  </p:stCondLst>\n'
+            '		  <p:childTnLst>\n'
+            '			<p:par>\n'
+            '			  <p:cTn id="%d" fill="hold">\n'
+            '				<p:stCondLst>\n'
+            '				  <p:cond delay="0"/>\n'
+            '				</p:stCondLst>\n'
+            '				<p:childTnLst>\n'
+            '				  <p:par>\n'
+            '					<p:cTn id="%d" presetID="1" presetClass="mediacall" presetSubtype="0" fill="hold" nodeType="clickEffect">\n'
+            '					  <p:stCondLst>\n'
+            '						<p:cond delay="0"/>\n'
+            '					  </p:stCondLst>\n'
+            '					  <p:childTnLst>\n'
+            '						<p:cmd type="call" cmd="playFrom(0.0)">\n'
+            '						  <p:cBhvr>\n'
+            '							<p:cTn id="%d" dur="%d" fill="hold"/>\n'
+            '							<p:tgtEl>\n'
+            '							  <p:spTgt spid="%d"/>\n'
+            '							</p:tgtEl>\n'
+            '						  </p:cBhvr>\n'
+            '						</p:cmd>\n'
+            '					  </p:childTnLst>\n'
+            '					</p:cTn>\n'
+            '				  </p:par>\n'
+            '				</p:childTnLst>\n'
+            '			  </p:cTn>\n'
+            '			</p:par>\n'
+            '		  </p:childTnLst>\n'
+            '		</p:cTn>\n'
+            '	  </p:par>\n'
+            '	</p:childTnLst>\n'
+            '  </p:cTn>\n'
+            '  <p:prevCondLst>\n'
+            '	<p:cond evt="onPrev" delay="0">\n'
+            '	  <p:tgtEl>\n'
+            '		<p:sldTgt/>\n'
+            '	  </p:tgtEl>\n'
+            '	</p:cond>\n'
+            '  </p:prevCondLst>\n'
+            '  <p:nextCondLst>\n'
+            '	<p:cond evt="onNext" delay="0">\n'
+            '	  <p:tgtEl>\n'
+            '		<p:sldTgt/>\n'
+            '	  </p:tgtEl>\n'
+            '	</p:cond>\n'
+            '  </p:nextCondLst>\n'
+            '</p:seq>\n' % (nsdecls('p'), self._next_cTn_id, self._next_cTn_id, self._next_cTn_id, self._next_cTn_id, self._next_cTn_id, video_length, shape_id)
+        )
+        seq = parse_xml(seq_xml)
+        self.append(seq)
+
     @property
     def _next_cTn_id(self):
         """Return the next available unique ID (int) for p:cTn element."""

@@ -460,7 +460,8 @@ class SlideShapes(_BaseShapes):
         return self._shape_factory(cxnSp)
 
     def add_movie(self, movie_file, left, top, width, height,
-                  poster_frame_image=None, mime_type=CT.VIDEO):
+                  poster_frame_image=None, mime_type=CT.VIDEO,
+                  autoplay_onclick=False, movie_length=0):
         """Return newly added movie shape displaying video in *movie_file*.
 
         **EXPERIMENTAL.** This method has important limitations:
@@ -486,6 +487,9 @@ class SlideShapes(_BaseShapes):
         )
         self._spTree.append(movie_pic)
         self._add_video_timing(movie_pic)
+
+        if autoplay_onclick:
+            self._add_video_timing_play_onclick(movie_pic, movie_length)
         return self._shape_factory(movie_pic)
 
     def add_picture(self, image_file, left, top, width=None, height=None):
@@ -674,6 +678,16 @@ class SlideShapes(_BaseShapes):
         sld = self._spTree.xpath('/p:sld')[0]
         childTnLst = sld.get_or_add_childTnLst()
         childTnLst.add_video(pic.shape_id)
+
+    def _add_video_timing_play_onclick(self, pic, video_length):
+        """Add a `p:seq` element under `p:sld/p:timing`.
+
+        The element will refer to the specified *pic* element by its shape
+        id, and cause the video to play when the user clicks.
+        """
+        sld = self._spTree.xpath('/p:sld')[0]
+        childTnLst = sld.get_or_add_childTnLst()
+        childTnLst.add_video_play_onclick(pic.shape_id, video_length)
 
     def _shape_factory(self, shape_elm):
         """
