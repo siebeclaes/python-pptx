@@ -308,10 +308,76 @@ class CT_TimeNodeList(BaseOxmlElement):
         self.append(seq)
 
     @property
+    def _childTnLst(self):
+        """Return `./p:seq/p:cTn/p:childTnLst` descendant.
+
+        Return None if that element is not present.
+        """
+        childTnLsts = self.xpath(
+            './p:seq/p:cTn/p:childTnLst'
+        )
+        if not childTnLsts:
+            return None
+        return childTnLsts[0]
+
+    def add_textbox_appear(self, shape_id):
+        """Add a new `p:seq` child element for shape havind *shape_id* so that it appears after *delay* ms"""
+        ctnId = self._next_cTn_id
+        first_seq_childTnLst = self._childTnLst
+        anim_xml = ('<p:par %s>\n'
+                    '	<p:cTn id="%d" fill="hold">\n'
+                    '		<p:stCondLst>\n'
+                    '			<p:cond delay="indefinite"/>\n'
+                    '		</p:stCondLst>\n'
+                    '		<p:childTnLst>\n'
+                    '			<p:par>\n'
+                    '				<p:cTn id="%d" fill="hold">\n'
+                    '				<p:stCondLst>\n'
+                    '					<p:cond delay="0"/>\n'
+                    '				</p:stCondLst>\n'
+                    '				<p:childTnLst>\n'
+                    '					<p:par>\n'
+                    '						<p:cTn id="%d" presetID="1" presetClass="entr" presetSubtype="0" fill="hold" grpId="0" nodeType="clickEffect">\n'
+                    '							<p:stCondLst>\n'
+                    '								<p:cond delay="0"/>\n'
+                    '							</p:stCondLst>\n'
+                    '							<p:childTnLst>\n'
+                    '								<p:set>\n'
+                    '									<p:cBhvr>\n'
+                    '									<p:cTn id="%d" dur="1" fill="hold">\n'
+                    '										<p:stCondLst>\n'
+                    '											<p:cond delay="0"/>\n'
+                    '										</p:stCondLst>\n'
+                    '									</p:cTn>\n'
+                    '									<p:tgtEl>\n'
+                    '										<p:spTgt spid="%d"/>\n'
+                    '									</p:tgtEl>\n'
+                    '									<p:attrNameLst>\n'
+                    '										<p:attrName>style.visibility</p:attrName>\n'
+                    '									</p:attrNameLst>\n'
+                    '									</p:cBhvr>\n'
+                    '									<p:to>\n'
+                    '										<p:strVal val="visible"/>\n'
+                    '									</p:to>\n'
+                    '								</p:set>\n'
+                    '							</p:childTnLst>\n'
+                    '						</p:cTn>\n'
+                    '					</p:par>\n'
+                    '				</p:childTnLst>\n'
+                    '				</p:cTn>\n'
+                    '			</p:par>\n'
+                    '		</p:childTnLst>\n'
+                    '	</p:cTn>\n'
+                    '</p:par>\n' % (nsdecls('p'), ctnId, ctnId + 1, ctnId + 2, ctnId + 3, shape_id))
+        anim = parse_xml(anim_xml)
+        first_seq_childTnLst.append(anim)
+
+    @property
     def _next_cTn_id(self):
         """Return the next available unique ID (int) for p:cTn element."""
         cTn_id_strs = self.xpath('/p:sld/p:timing//p:cTn/@id')
         ids = [int(id_str) for id_str in cTn_id_strs]
+        print(ids)
         return max(ids) + 1
 
 

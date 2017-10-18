@@ -538,6 +538,12 @@ class SlideShapes(_BaseShapes):
         textbox = self._shape_factory(sp)
         return textbox
 
+    def add_textbox_appear_animation(self, shape):
+        shape_id = shape.shape_id
+        sld = self._spTree.xpath('/p:sld')[0]
+        childTnLst = sld.get_or_add_childTnLst()
+        childTnLst.add_textbox_appear(shape_id)
+
     def clone_layout_placeholders(self, slide_layout):
         """
         Add placeholder shapes based on those in *slide_layout*. Z-order of
