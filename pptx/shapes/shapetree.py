@@ -459,6 +459,23 @@ class SlideShapes(_BaseShapes):
         )
         return self._shape_factory(cxnSp)
 
+    def add_audio(self, audio_file, mime_type=CT.MP3,
+                  autoplay_onclick=False, audio_length=0):
+        """Return newly added audio shape playing audio in *audio_file*.
+
+        **EXPERIMENTAL.** This method has important limitations:
+        """
+        audio_pic = _AudioPicElementCreator.new_audio_pic(
+            self, self._next_shape_id, audio_file, mime_type
+        )
+        self._spTree.append(audio_pic)
+        self._add_audio_timing(audio_pic, audio_length)
+
+        if autoplay_onclick:
+            #self._add_video_timing_play_onclick(movie_pic, movie_length)
+            pass
+        return self._shape_factory(audio_pic)
+
     def add_movie(self, movie_file, left, top, width, height,
                   poster_frame_image=None, mime_type=CT.VIDEO,
                   autoplay_onclick=False, movie_length=0):
@@ -674,6 +691,16 @@ class SlideShapes(_BaseShapes):
         name = 'TextBox %d' % (id_-1)
         sp = self._spTree.add_textbox(id_, name, x, y, cx, cy)
         return sp
+    
+    def _add_audio_timing(self, pic, duration):
+        """Add a `p:audio` element under `p:sld/p:timing`.
+
+        The element will refer to the specified *pic* element by its shape
+        id, and cause the video play controls to appear for that video.
+        """
+        sld = self._spTree.xpath('/p:sld')[0]
+        childTnLst = sld.get_or_add_childTnLst()
+        childTnLst.add_audio(pic.shape_id, duration)
 
     def _add_video_timing(self, pic):
         """Add a `p:video` element under `p:sld/p:timing`.
@@ -702,6 +729,119 @@ class SlideShapes(_BaseShapes):
         """
         return SlideShapeFactory(shape_elm, self)
 
+
+class _AudioPicElementCreator(object):
+    """Functional service object for creating a new audio p:pic element.
+
+    It's entire external interface is its :meth:`new_audio_pic` class method
+    that returns a new `p:pic` element containing the specified audio. This
+    class is not intended to be constructed or an instance of it retained by
+    the caller; it is a "one-shot" object, really a function wrapped in
+    a object such that its helper methods can be organized here.
+    """
+
+    def __init__(self, shapes, shape_id, audio_file, mime_type):
+        super(_AudioPicElementCreator, self).__init__()
+        self._shapes = shapes
+        self._shape_id = shape_id
+        self._audio_file = audio_file
+        self._poster_frame_file = None
+        self._mime_type = mime_type
+
+    @classmethod
+    def new_audio_pic(cls, shapes, shape_id, audio_file, mime_type):
+        """Return a new `p:pic` element containing video in *movie_file*.
+
+        If *mime_type* is None, 'video/unknown' is used. If
+        *poster_frame_file* is None, the default "media loudspeaker" image is
+        used.
+        """
+        return cls(
+            shapes, shape_id, audio_file, mime_type
+        )._pic
+        return
+
+    @property
+    def _media_rId(self):
+        """Return the rId of RT.MEDIA relationship to video part.
+
+        For historical reasons, there are two relationships to the same part;
+        one is the video rId and the other is the media rId.
+        """
+        return self._audio_part_rIds[0]
+
+    @lazyproperty
+    def _pic(self):
+        """Return the new `p:pic` element referencing the video."""
+        return CT_Picture.new_audio_pic(
+            self._shape_id, self._shape_name, self._audio_rId,
+            self._media_rId, self._poster_frame_rId
+        )
+
+    @lazyproperty
+    def _poster_frame_image_file(self):
+        """Return the image file for video placeholder image.
+
+        If no poster frame file is provided, the default "media loudspeaker"
+        image is used.
+        """
+        poster_frame_file = self._poster_frame_file
+        if poster_frame_file is None:
+            return BytesIO(SPEAKER_IMAGE_BYTES)
+        return poster_frame_file
+
+    @lazyproperty
+    def _poster_frame_rId(self):
+        """Return the rId of relationship to poster frame image.
+
+        The poster frame is the image used to represent the video before it's
+        played.
+        """
+        _, poster_frame_rId = self._slide_part.get_or_add_image_part(
+            'assets/audio.png'
+        )
+        return poster_frame_rId
+
+    @property
+    def _shape_name(self):
+        """Return the appropriate shape name for the p:pic shape.
+
+        A movie shape is named with the base filename of the video.
+        """
+        return self._audio.filename
+
+    @property
+    def _slide_part(self):
+        """Return SlidePart object for slide containing this movie."""
+        return self._shapes.part
+
+    @lazyproperty
+    def _audio(self):
+        """Return a |Video| object containing the audio file."""
+        return Video.from_path_or_file_like(
+            self._audio_file, self._mime_type
+        )
+
+    @lazyproperty
+    def _audio_part_rIds(self):
+        """Return the rIds for relationships to media part for video.
+
+        This is where the media part and its relationships to the slide are
+        actually created.
+        """
+        media_rId, audio_rId = self._slide_part.get_or_add_audio_media_part(
+            self._audio
+        )
+        return media_rId, audio_rId
+
+    @property
+    def _audio_rId(self):
+        """Return the rId of RT.VIDEO relationship to video part.
+
+        For historical reasons, there are two relationships to the same part;
+        one is the video rId and the other is the media rId.
+        """
+        return self._audio_part_rIds[1]
 
 class _MoviePicElementCreator(object):
     """Functional service object for creating a new movie p:pic element.

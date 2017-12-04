@@ -78,6 +78,7 @@ class Video(object):
             CT.SWF:        'swf',
             CT.WMV:        'wmv',
             CT.X_MS_VIDEO: 'avi',
+            CT.MP3:        'mp3',
         }.get(self._mime_type, 'vid')
 
     @property

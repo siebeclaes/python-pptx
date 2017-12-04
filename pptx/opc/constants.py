@@ -10,7 +10,9 @@ class CONTENT_TYPE(object):
     """
     Content type URIs (like MIME-types) that specify a part's format
     """
-
+    MP3 = (
+        'audio/mpeg'
+    )
     ASF = (
         'video/x-ms-asf'
     )

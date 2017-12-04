@@ -225,6 +225,92 @@ class CT_SlideTiming(BaseOxmlElement):
 
 class CT_TimeNodeList(BaseOxmlElement):
     """`p:tnLst` or `p:childTnList` element."""
+    
+    def add_audio(self, shape_id, duration):
+        """Add a new `p:audio` child element for audio pic having *shape_id*."""
+        ctnId = self._next_cTn_id
+        seq_xml = (
+            '<p:seq concurrent="1" nextAc="seek" %s>\n'
+            '    <p:cTn id="%d" dur="indefinite" nodeType="mainSeq">\n'
+            '      <p:childTnLst>\n'
+            '        <p:par>\n'
+            '          <p:cTn id="%d" fill="hold">\n'
+            '            <p:stCondLst>\n'
+            '              <p:cond delay="indefinite"/>\n'
+            '            </p:stCondLst>\n'
+            '            <p:childTnLst>\n'
+            '              <p:par>\n'
+            '                <p:cTn id="%d" fill="hold">\n' '                  <p:stCondLst>\n'
+            '                    <p:cond delay="0"/>\n'
+            '                  </p:stCondLst>\n'
+            '                  <p:childTnLst>\n'
+            '                    <p:par>\n'
+            '                      <p:cTn id="%d" presetID="1" presetClass="mediacall" presetSubtype="0" fill="hold" nodeType="clickEffect">\n'
+            '                        <p:stCondLst>\n'
+            '                          <p:cond delay="0"/>\n'
+            '                        </p:stCondLst>\n'
+            '                        <p:childTnLst>\n'
+            '                          <p:cmd type="call" cmd="playFrom(0.0)">\n'
+            '                            <p:cBhvr>\n'
+            '                              <p:cTn id="%d" dur="%d" fill="hold"/>\n'
+            '                              <p:tgtEl>\n'
+            '                                <p:spTgt spid="%d"/>\n'
+            '                              </p:tgtEl>\n'
+            '                            </p:cBhvr>\n'
+            '                          </p:cmd>\n'
+            '                        </p:childTnLst>\n'
+            '                      </p:cTn>\n'
+            '                    </p:par>\n'
+            '                  </p:childTnLst>\n'
+            '                </p:cTn>\n'
+            '              </p:par>\n'
+            '            </p:childTnLst>\n'
+            '          </p:cTn>\n'
+            '        </p:par>\n'
+            '      </p:childTnLst>\n'
+            '    </p:cTn>\n'
+            '    <p:prevCondLst>\n'
+            '      <p:cond evt="onPrev" delay="0">\n'
+            '      <p:tgtEl>\n'
+            '        <p:sldTgt/>\n'
+            '      </p:tgtEl>\n'
+            '     </p:cond>\n'
+            '    </p:prevCondLst>\n'
+            '    <p:nextCondLst>\n'
+            '      <p:cond evt="onNext" delay="0">\n'
+            '        <p:tgtEl>\n'
+            '          <p:sldTgt/>\n'
+            '        </p:tgtEl>\n'
+            '      </p:cond>\n'
+            '    </p:nextCondLst>\n'
+            '    </p:seq>\n' % (nsdecls('p'), ctnId, ctnId+1, ctnId+2, ctnId+3, ctnId+4, duration, shape_id)
+        )
+        audio_xml = (
+            '<p:audio %s>\n'
+            '    <p:cMediaNode vol="80000" showWhenStopped="0">\n'
+            '      <p:cTn id="%d" display="0">\n'
+            '        <p:stCondLst>\n'
+            '          <p:cond delay="indefinite"/>\n'
+            '        </p:stCondLst>\n'
+            '        <p:endCondLst>\n'
+            '          <p:cond evt="onStopAudio" delay="0">\n'
+            '            <p:tgtEl>\n'
+            '              <p:sldTgt/>\n'
+            '            </p:tgtEl>\n'
+            '          </p:cond>\n'
+            '        </p:endCondLst>\n'
+            '      </p:cTn>\n'
+            '      <p:tgtEl>\n'
+            '        <p:spTgt spid="%d"/>\n'
+            '      </p:tgtEl>\n'
+            '    </p:cMediaNode>\n'
+            '</p:audio>\n' % (nsdecls('p'), ctnId+5, shape_id)
+        )
+        seq = parse_xml(seq_xml)
+        audio = parse_xml(audio_xml)
+
+        self.append(seq)
+        self.append(audio)
 
     def add_video(self, shape_id):
         """Add a new `p:video` child element for movie having *shape_id*."""
